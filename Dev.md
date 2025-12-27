@@ -67,7 +67,7 @@ Electron-HTTP-Proxy 是一个基于 Electron 开发的 Mac 版 HTTP(S) 代理抓
 ### 目录结构
 
 ```
-electron-http-proxy/
+z-proxy/
 ├── server/               # Electron 主进程 + 服务端代码（开发和生产环境共用）
 │   ├── electron.js       # Electron 主进程入口（package.json 的 main 字段）
 │   ├── index.js          # AnyProxy 服务启动
