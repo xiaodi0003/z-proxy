@@ -3,7 +3,7 @@
     <el-aside :width="collapsed ? '64px' : '200px'" class="sidebar">
       <div class="logo">
         <img src="../assets/logo.svg" alt="logo" />
-        <h1 v-if="!collapsed">HTTP Proxy</h1>
+        <h1 v-if="!collapsed">z-proxy</h1>
       </div>
       <el-menu
         :default-active="activeMenu"

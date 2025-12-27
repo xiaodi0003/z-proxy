@@ -20,6 +20,7 @@ function createWindow() {
   const mainWindow = new BrowserWindow({ 
     width: 1366,
     height: 800,
+    icon: path.join(__dirname, '../public/icons/icon-512x512.png'),
     webPreferences: {
       // preload: path.join(__dirname, '../static/preload.js'),
       /* 禁用webpage的require检查 */
