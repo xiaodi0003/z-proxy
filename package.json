@@ -10,8 +10,12 @@
     "prettier": "prettier -c --write \"**/*\"",
     "start-electron": "export PORT=8001 && electron . --inspect=5858",
     "dev": "concurrently \"yarn dev:vue\" \"yarn start-electron\"",
-    "package": "electron-builder build --mac --publish never",
-    "build-package": "yarn build:vue && yarn package",
+    "package:mac": "electron-builder build --mac --publish never",
+    "package:win": "electron-builder build --win --publish never",
+    "package:all": "electron-builder build --mac --win --publish never",
+    "build-package:mac": "yarn build:vue && yarn package:mac",
+    "build-package:win": "yarn build:vue && yarn package:win",
+    "build-package:all": "yarn build:vue && yarn package:all",
     "update-package:asar": "yarn build:vue && node scripts/update-asar.js",
     "anyproxy-ca": "anyproxy-ca",
     "dev:vue": "vite --config vite.config.ts",
@@ -51,9 +55,11 @@
   "productName": "z-proxy",
   "main": "server/electron.js",
   "build": {
+    "asar": false,
     "files": [
       "build/**/*",
-      "server/**/*"
+      "server/**/*",
+      "public/**/*"
     ],
     "publish": {
       "provider": "github",
