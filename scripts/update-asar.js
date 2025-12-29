@@ -30,7 +30,7 @@ function removeDir(dir) {
 }
 
 function updateAsar() {
-  const asarPath = path.join(__dirname, '../dist/mac/ElectronHttpProxy.app/Contents/Resources/app.asar');
+  const asarPath = path.join(__dirname, '../dist/mac/z-proxy.app/Contents/Resources/app.asar');
   const tempDir = path.join(__dirname, '../temp-asar');
   
   if (!fs.existsSync(asarPath)) {
@@ -74,7 +74,7 @@ function updateAsar() {
     removeDir(tempDir);
     
     console.log('\n✅ Package updated successfully!');
-    console.log(`📦 App location: ${path.join(__dirname, '../dist/mac/ElectronHttpProxy.app')}`);
+    console.log(`📦 App location: ${path.join(__dirname, '../dist/mac/z-proxy.app')}`);
     console.log('💡 You can now run the app directly from the dist folder.\n');
   } catch (error) {
     console.error('\n❌ Update failed:', error.message);

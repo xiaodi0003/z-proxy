@@ -309,7 +309,7 @@ beforeSendResponse 钩子
 
 ### electron-store
 - 用于持久化动态代理配置
-- 存储位置: `~/Library/Application Support/ElectronHttpProxy/`
+- 存储位置: `~/Library/Application Support/z-proxy/`
 - 数据格式: JSON
 
 ### 内存存储
