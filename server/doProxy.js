@@ -318,12 +318,34 @@ async function exeProxy(target, requestDetail) {
   // Handle file:// protocol
   if (target.startsWith('file://')) {
     return new Promise(resolve => {
-      let fileName = target.replace('file://', '/').replace(/\?.*/, '');
+      let fileName = target;
+      
+      // Remove query string first
+      fileName = fileName.replace(/\?.*/, '');
+      
+      // Parse file:// URL correctly for both Windows and Unix
+      if (fileName.startsWith('file:///')) {
+        // Windows: file:///C:/path or Unix: file:///path
+        fileName = fileName.substring(7); // Remove 'file://'
+      } else if (fileName.startsWith('file://')) {
+        // Fallback for file:// format
+        fileName = fileName.substring(7); // Remove 'file://'
+      }
+      
+      // On Windows, ensure proper path format
+      if (process.platform === 'win32' && fileName.startsWith('/')) {
+        // Remove leading slash for Windows absolute paths like /C:/path
+        if (fileName.match(/^\/[a-zA-Z]:/)) {
+          fileName = fileName.substring(1);
+        }
+      }
+      
       if (fileName.endsWith('/')) {
         fileName += 'index.html';
       }
-      fs.readFile(fileName, function(err,data) {
-        if(err) {
+      
+      fs.readFile(fileName, function(err, data) {
+        if (err) {
           resolve({
             response: {
               statusCode: 404,
