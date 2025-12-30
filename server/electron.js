@@ -17,25 +17,39 @@ function createWindow() {
     slashes: true,
   });
 
+  console.log('Loading URL:', startUrl);
+
   const mainWindow = new BrowserWindow({ 
     width: 1366,
     height: 800,
     icon: path.join(__dirname, '../public/icons/icon-512x512.png'),
     webPreferences: {
       // preload: path.join(__dirname, '../static/preload.js'),
-      /* 禁用webpage的require检查 */
+      /* Enable Node.js integration for Electron 12+ */
       nodeIntegration: true,
-      // 只应该在dev模式为false
-      webSecurity: true
+      contextIsolation: false,
+      enableRemoteModule: true,
+      /* Should be false in production */
+      webSecurity: false
     }
   });
+  
   mainWindow.loadURL(startUrl);
 
-  // Open the DevTools.
+  // Open DevTools in production to debug issues
   // mainWindow.webContents.openDevTools();
 
-  // 注册快捷键
-  // Cmd+R / Ctrl+R: 刷新页面
+  // Log any errors
+  mainWindow.webContents.on('crashed', () => {
+    console.error('Renderer process crashed');
+  });
+
+  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
+    console.error(`Failed to load ${validatedURL}: ${errorCode} ${errorDescription}`);
+  });
+
+  // Register shortcuts
+  // Cmd+R / Ctrl+R: Reload page
   globalShortcut.register('CommandOrControl+R', () => {
     const focusedWindow = BrowserWindow.getFocusedWindow();
     if (focusedWindow) {
@@ -43,7 +57,7 @@ function createWindow() {
     }
   });
 
-  // Cmd+Shift+R / Ctrl+Shift+R: 强制刷新（忽略缓存）
+  // Cmd+Shift+R / Ctrl+Shift+R: Force reload (ignore cache)
   globalShortcut.register('CommandOrControl+Shift+R', () => {
     const focusedWindow = BrowserWindow.getFocusedWindow();
     if (focusedWindow) {
@@ -51,7 +65,7 @@ function createWindow() {
     }
   });
 
-  // F5: 刷新页面（Windows 习惯）
+  // F5: Reload page (Windows habit)
   globalShortcut.register('F5', () => {
     const focusedWindow = BrowserWindow.getFocusedWindow();
     if (focusedWindow) {

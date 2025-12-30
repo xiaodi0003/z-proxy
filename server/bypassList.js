@@ -1,6 +1,11 @@
 const { set, get } = require('./store');
 const { getActiveNetworkServices } = require('./systemShell');
 const process = require('child_process');
+const os = require('os');
+
+const platform = os.platform();
+const isWindows = platform === 'win32';
+const isMac = platform === 'darwin';
 
 let bypassListCache = null;
 let saveTimer = null;
@@ -68,46 +73,89 @@ async function updateSystemProxyBypass() {
     .filter((item) => item.enabled)
     .map((item) => item.domain);
 
-  // Only update if there are enabled domains
-  if (enabledDomains.length === 0) {
-    console.log('No enabled bypass list domains, skipping system update');
-    return;
-  }
-
-  const services = await getActiveNetworkServices();
-  const bypassDomains = enabledDomains.join(' ');
-
-  services.forEach((service) => {
-    const cmd = `networksetup -setproxybypassdomains "${service}" ${bypassDomains}`;
+  if (isWindows) {
+    // Windows: Set ProxyOverride in registry (empty string to clear)
+    const bypassList = enabledDomains.length > 0 ? enabledDomains.join(';') : '';
+    const cmd = `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings" /v ProxyOverride /t REG_SZ /d "${bypassList}" /f`;
     process.exec(cmd, (error) => {
-      if (error) console.error(`Failed to update bypass for ${service}:`, error);
+      if (error) {
+        console.error('Failed to update Windows bypass list:', error);
+      } else {
+        console.log(`Windows bypass list updated: ${bypassList || '(empty)'}`);
+      }
     });
-  });
+  } else if (isMac) {
+    // macOS: Use networksetup
+    if (enabledDomains.length === 0) {
+      console.log('No enabled bypass list domains, clearing macOS bypass list');
+      const services = await getActiveNetworkServices();
+      services.forEach((service) => {
+        const cmd = `networksetup -setproxybypassdomains "${service}" ""`;
+        process.exec(cmd, (error) => {
+          if (error) console.error(`Failed to clear bypass for ${service}:`, error);
+        });
+      });
+    } else {
+      const services = await getActiveNetworkServices();
+      const bypassDomains = enabledDomains.join(' ');
+
+      services.forEach((service) => {
+        const cmd = `networksetup -setproxybypassdomains "${service}" ${bypassDomains}`;
+        process.exec(cmd, (error) => {
+          if (error) console.error(`Failed to update bypass for ${service}:`, error);
+        });
+      });
+    }
+  }
 }
 
 exports.updateSystemProxyBypass = updateSystemProxyBypass;
 
 // Get current system proxy bypass domains
 async function getSystemProxyBypass() {
-  const services = await getActiveNetworkServices();
   const bypassDomains = {};
 
-  for (const service of services) {
+  if (isWindows) {
+    // Windows: Read ProxyOverride from registry
     await new Promise((resolve) => {
-      const cmd = `networksetup -getproxybypassdomains "${service}"`;
+      const cmd = `reg query "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings" /v ProxyOverride`;
       process.exec(cmd, (error, stdout) => {
         if (!error && stdout) {
-          const domains = stdout
-            .split('\n')
-            .map((line) => line.trim())
-            .filter((line) => line && !line.startsWith('There'));
-          if (domains.length > 0) {
-            bypassDomains[service] = domains;
+          const match = stdout.match(/ProxyOverride\s+REG_SZ\s+(.+)/);
+          if (match && match[1]) {
+            const domains = match[1]
+              .split(';')
+              .map((d) => d.trim())
+              .filter((d) => d);
+            if (domains.length > 0) {
+              bypassDomains['Windows'] = domains;
+            }
           }
         }
         resolve();
       });
     });
+  } else if (isMac) {
+    // macOS: Use networksetup
+    const services = await getActiveNetworkServices();
+
+    for (const service of services) {
+      await new Promise((resolve) => {
+        const cmd = `networksetup -getproxybypassdomains "${service}"`;
+        process.exec(cmd, (error, stdout) => {
+          if (!error && stdout) {
+            const domains = stdout
+              .split('\n')
+              .map((line) => line.trim())
+              .filter((line) => line && !line.startsWith('There'));
+            if (domains.length > 0) {
+              bypassDomains[service] = domains;
+            }
+          }
+          resolve();
+        });
+      });
+    }
   }
 
   return bypassDomains;
