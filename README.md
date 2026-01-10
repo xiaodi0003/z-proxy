@@ -2,7 +2,7 @@
 
 ## 用户手册
 
-- [z-proxy用户手册](./doc/USER_GUIDE_0.2.0.md)
+- [z-proxy用户手册](./doc/USER_GUIDE_0.2.1.md)
 
 ## 简介
 - 基于Electron开发的Mac版软件，实现对本机HTTP(S)请求的监听
